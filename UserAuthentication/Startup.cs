@@ -21,7 +21,7 @@ namespace UserAuthentication
         }
 
         public IConfiguration Configuration { get; }
-
+        public string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -32,23 +32,33 @@ namespace UserAuthentication
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(x => {
+            }).AddJwtBearer(x =>
+            {
                 x.RequireHttpsMetadata = false;
                 x.SaveToken = true;
                 x.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-                    ValidateIssuer=false,
-                    ValidateAudience=false
+                    ValidateIssuer = false,
+                    ValidateAudience = false
 
                 };
             });
 
 
             services.AddSingleton<IUserRepository, UserRepository>();
-            services.AddSingleton<IUserService>(x => new UserService(x.GetRequiredService<IUserRepository>(),key));
-           
+            services.AddSingleton<IUserService>(x => new UserService(x.GetRequiredService<IUserRepository>(), key));
+
+            services.AddCors(c =>
+            {
+                c.AddPolicy(MyAllowSpecificOrigins, options => options.AllowAnyOrigin()
+                                                             .AllowAnyHeader()
+                                                             .AllowAnyMethod()
+                            );
+
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,7 +68,7 @@ namespace UserAuthentication
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseCors(MyAllowSpecificOrigins);
             app.UseHttpsRedirection();
 
             app.UseRouting();

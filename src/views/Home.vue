@@ -1,18 +1,41 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+  <div>
+    <h1>Hello {{ user.name }}!</h1>
+    <div v-if="isAuth">
+      <b-button @click="signOut">Sign out</b-button>
+    </div>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
-
+import userService from "../Services/UserService";
+import { mapGetters, mapActions } from "vuex";
+import { BButton } from "bootstrap-vue";
 export default {
-  name: "Home",
+  created() {
+    userService.get().then(({ data }) => (this.user = data));
+  },
   components: {
-    HelloWorld,
+    BButton,
+  },
+  data() {
+    return {
+      user: {
+        username: "",
+        name: "",
+      },
+    };
+  },
+  computed: {
+    ...mapGetters(["isAuth"]),
+  },
+  methods: {
+    ...mapActions(["AUTH_LOGOUT"]),
+    signOut() {
+      this.AUTH_LOGOUT().then(() => {
+        this.$router.push("/login");
+      });
+    },
   },
 };
 </script>
